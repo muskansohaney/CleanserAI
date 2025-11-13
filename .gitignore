@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit cache
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# OS and IDE files
+.DS_Store
+.vscode/
+.idea/

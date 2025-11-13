@@ -1,0 +1,89 @@
+import sys
+
+# Set a high recursion limit for deep DFS on the tree
+sys.setrecursionlimit(200000)
+
+def solve():
+    # Fast input reading
+    try:
+        # Read number of vertices
+        n = int(sys.stdin.readline())
+    except:
+        # Handle EOF or empty input
+        return
+
+    # Read chocolate counts (weights) for each vertex
+    # a_i is 1-indexed for convenience (a[0] is unused)
+    a = [0] + list(map(int, sys.stdin.readline().split()))
+
+    # Build the adjacency list for the tree (1-indexed)
+    adj = [[] for _ in range(n + 1)]
+    for _ in range(n - 1):
+        try:
+            u, v = map(int, sys.stdin.readline().split())
+            adj[u].append(v)
+            adj[v].append(u)
+        except:
+            # Handle potential incomplete edge input
+            break
+
+    # Global variable to store the maximum total chocolate collected
+    # This will be updated inside the DFS
+    global_max_chocolates = 0
+
+    def dfs(u, p):
+        """
+        DFS function to compute DP on tree and update the global maximum.
+        u: current node
+        p: parent node
+        
+        Returns: dp[u], the maximum sum of chocolates on a path starting at u 
+                and going into the subtree rooted at u (excluding p).
+        """
+        nonlocal global_max_chocolates
+        
+        # List to store dp[v] for all children v of u
+        child_dp_values = []
+
+        for v in adj[u]:
+            if v != p:
+                child_dp_values.append(dfs(v, u))
+        
+        # Sort the dp values of children in descending order
+        child_dp_values.sort(reverse=True)
+        
+        # --- Update global_max_chocolates ---
+        
+        # Case 1: The two best paths pass through u and extend into its subtree.
+        # Path 1: u -> best_child_path (length >= 1)
+        # Path 2: u -> second_best_child_path (length >= 1)
+        # The sum is a[u] + best_child_path + second_best_child_path
+        
+        # We need the two largest *positive* contributions from the children.
+        
+        # Contribution 1 (max_dp1): The largest positive path sum from a child
+        max_dp1 = child_dp_values[0] if child_dp_values and child_dp_values[0] > 0 else 0
+        
+        # Contribution 2 (max_dp2): The second largest positive path sum from a child
+        max_dp2 = child_dp_values[1] if len(child_dp_values) >= 2 and child_dp_values[1] > 0 else 0
+        
+        # The total chocolate count for this pair of paths (centered at u)
+        current_pair_max = a[u] + max_dp1 + max_dp2
+        global_max_chocolates = max(global_max_chocolates, current_pair_max)
+
+        # --- Calculate and return dp[u] ---
+        
+        # dp[u] is a[u] + max(0, max_dp from a single child)
+        # It's the maximum sum of a single path starting at u and going down.
+        dp_u = a[u] + max_dp1
+        
+        return dp_u
+
+    # The maximum value can occur anywhere. Start DFS from an arbitrary root (e.g., node 1).
+    if n > 0:
+        dfs(1, 0)
+    
+    print(global_max_chocolates)
+
+if __name__ == "__main__":
+    solve()
